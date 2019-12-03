@@ -1,87 +1,103 @@
 # Job scheduler simulator
 A simplified job scheduler simulator written in C as part of a University assignment.
 
-## Introdction
+# Requirements
+
+## Introduction
 Create a program (from now on "simulator") in C that simulates two schedulers.
 One with preemption, the other without.
 The objective of the simulation is to provide a comparison between the two approaches.
 The program must simulate the entities education, job, processor, core, clock and scheduler.
 
 ## Functionalities
-All’avvio del simulatore si devono creare 3 processi:
-1. master
-2. scheduler_preemptive
-3. scheduler_not_preemptive
-Il processo “master” legge da file i job da eseguire e li inoltra ad entrambi gli scheduler.
-Lo scheduler con preemption adotta la strategia Round Robin, la durata del quanto (time
-slice) verrà fornita come parametro al simulatore, mentre lo scheduler senza preemption
-adotta la strategia Shortest Job Next (SJN).
-Con “Shortest Job” è inteso il Job con la minor somma della lunghezza di istruzioni che sono
-ancora da eseguire.
-Uno scheduler termina nel momento in cui non ci sono più job da eseguire.
-A prescindere dalla strategia, quando un’istruzione si sospende a causa di una operazione
-bloccante, un altro job deve essere schedulato.
+When starting the simulator, you need to create 3 processes:
+* master
+* scheduler_preemptive
+* scheduler_not_preemptive
+
+
+The "master" process reads the jobs to be executed from file and forwards them to both schedulers.
+The scheduler with preemption adopts the Round Robin strategy, the duration of the quantum (time
+slice) will be provided as a parameter to the simulator, while the scheduler without preemption
+adopts the Shortest Job Next (SJN) strategy.
+"Shortest Job" means the Job with the lowest sum of the length of instructions they are
+yet to be executed.
+A scheduler ends when there are no more jobs to execute.
+Regardless of the strategy, when an instruction is suspended due to an operation
+blocker, another job must be scheduled.
 
 ## Entities
-Il ​ processore​ di ogni scheduler ha due ​ core​ . Perciò bisognerà utilizzare 2 thread (reali) per
-simulare l’esecuzione di 2 job in parallelo. Ogni ​ core​ avrà quindi il proprio ​ clock​ simulato con
-un numero intero che incrementa ad ogni ciclo.Un’​ istruzione​ è composta da:
-● type_flag ​ :
-○ Flag 0 := istruzione di calcolo, ovvero non bloccante;
-○ Flag 1 := operazione di I/O, ovvero bloccante.
-● lenght ​ : la durata di esecuzione di un'istruzione in cicli di clock.
-● io_max ​ : se un’istruzione è bloccante, il job si blocca per un numero randomico
-compreso tra 1 e ​ io_max ​ cicli di clock.
-Un ​ job​ è definito da:
-● id ​ : id univoco
-● arrival_time ​ : numero intero che descrive a quale ciclo di clock il job deve essere
-considerato dallo scheduler
-● instr_list ​ : la lista delle istruzioni da eseguire.
-● state ​ : lo stato (new, ready, running, blocked, exit)
-Tutti i job letti da file avranno stato “new”.
-Uno scheduler NON deve mandare in esecuzione un job se: ​ clock(core) < clock(job)
-Un job termina nel momento in cui non ha più istruzioni da eseguire.
+The processor of each scheduler has two cores. Therefore we will have to use 2 (real) threads for
+simulate the execution of 2 jobs in parallel. Each core will then have its own clock simulated with
+an integer that increases with each cycle. 
+
+An instruction consists of:
+* type_flag:
+  * Flag 0: = calculation instruction, or non-blocking;
+  * Flag 1: = I/O operation, or blocking;
+* length: the duration of an instruction execution in clock cycles;
+* io_max: if an instruction is blocking, the job is blocked for a random number between 1 and io_max clock cycles.
+
+A job is defined by:
+* id: unique id;
+* arrival_time: integer describing at which clock cycle the job must be considered by the scheduler;
+* instr_list: the list of instructions to be executed;
+* state: the state (new, ready, running, blocked, exit).
+
+All jobs read from files will have a "new" status.
+
+A scheduler MUST NOT run a job if: clock(core) < clock(job)
+
+A job ends when it no longer has instructions to execute.
 
 
 ## Command line parameters
-Il simulatore accetta i seguenti parametri (​ obbligatori ​ ) da linea di comando:
-1. -op | --output-preemption: il file di output con i risultati dello scheduler con preemption
-2. -on | --output-no-preemption: il file di output con i risultati dello scheduler senza
-preemption
-3. -i | --input: il file di input contenente la lista dei job, al termine della scansione del file,
-i job devono essere inviati ai due scheduler nelle stesso ordine in cui sono stati letti.
-4. -q | --quantum: al durata di un quanto di tempo (misurato in cicli di clock) sullo
-scheduler con preemption
-Ad esempio:
-./simulator -op out_pre.csv -on out_not_pre.csv -i 6_jobs.dat -q 6Se questi parametri non vengono forniti, il simulatore termina mostrando un messaggio che
-descriva l’utilizzo del simulatore.
+The simulator accepts the following parameters (mandatory) from the command line:
+1. -op | --output-preemption: the output file with the scheduler results with preemption;
+2. -on | --output-no-preemption: the output file with the scheduler results without preemption;
+3. -i | --input: the input file containing the list of jobs. At the end of the file scan, jobs must be sent to the two schedulers in the same order in which they were read;
+4. -q | --quantum: the duration of a quantum of time (measured in clock cycles) on the scheduler with preemption.
+
+For example:
+
+`./simulator -op out_pre.csv -on out_not_pre.csv -i 6_jobs.dat -q 6`
+
+If these parameters are not supplied, the simulator terminates showing a message that describes the use of the simulator.
 
 
 ## Inputs
-La lista dei job (ordinati per “arrival_time”) e delle relative istruzioni è presente nella sottocartella "input jobs" di questo repository.
-Ogni linea incomincia con “j” o con “i”
-● j -> job
-○ j, id, arrival_time
-○ seguito dalle sue “i”struzioni
-● i -> istruzione
-○ i, type_flag, length, io_max
-Ad esempio, un file con il seguente contenuto:
-j,0,2
-i,1,6,6
-i,1,3,8
-j,1,23
-i,0,4,0
-Contiene 2 job, il primo formato da due istruzioni bloccanti, il secondo da un’istruzione
-bloccante.
-I file sono nominati: x_jobs.dat con x=01, 02, ... , 10
-I test verranno effettuati utilizzando il numero del file come quanto di tempo, ad esempio il
-file “07_jobs.dat” verrà testato con “-q 7”.
+The list of jobs (sorted by "arrival_time") and related instructions is present in the "input jobs" subfolder of this repository.
+
+Each line begins with "j" or "i"
+* j -> job
+  * j, id, arrival_time
+  * followed by its "i" instructions
+* i -> education
+  * i, type_flag, length, io_max
+  
+For example, a file with the following content:
+
+```
+j, 0.2
+i, 1,6,6
+i, 1,3,8
+j, 1.23
+i, 0,4,0
+```
+
+contains 2 jobs, the first formed by two blocking instructions, the second by a blocking instruction.
+The files are named: `x_jobs.dat` with x = 01, 02, ..., 10.
+The tests will be performed using the file number as long as, for example, the file `07_jobs.dat` will be tested with `-q 7`.
 
 
 ## Output
-Ogni volta che cambia lo stato di un job ogni scheduler dovrà loggare l’evento sul file
-corrispondente e l’output dovrà essere RIGOROSAMENTE formattato come descritto:
-core,clock,job_id,stato
-Esempi:
-core0,123,456,running
-core1,42,33,exit
+Each time the status of a job changes, each scheduler must log the event on the file
+corresponding and the output must be STRICTLY formatted as described:
+
+`core, clock, job_id, status`
+
+Examples:
+```
+core0,123,456, running
+core1,42,33, exit
+```
